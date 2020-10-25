@@ -1,0 +1,40 @@
+# ======= Install raspbian on target system
+sudo apt-get update && sudo apt-get dist-upgrade -y     # update the pi firmware
+sudo rpi-update
+sudo rpi-eeprom-update -a
+
+# ======= Install ubuntu 18.04 server on target system
+    - for raspi => get img from https://github.com/TheRemote/Ubuntu-Server-raspi4-unofficial/releases
+
+# ======= General updates and install DE
+sudo apt update && sudo apt upgrade -y
+sudo apt install python3-pip
+sudo apt install --no-install-recommends xubuntu-desktop
+sudo reboot
+pip3 install --upgrade pip
+pip3 install cython setuptools
+
+# ======= Setup serial ports on raspi
+cd /boot/firmware
+sudo nano config.txt        # NAVIGATE TO THE END OF THE FILE AND ADD THE FOLLOWING LINES:
+    enable_uart=1               # enables uart 
+    dtoverlay=uart3             # enables uart2 (only for pi4)
+    dtoverlay=uart4             # enables uart3 (only for pi4)
+sudo nano cmdline.txt
+    remove `console=serialX,115200` from the line and leave the other console entry alone
+sudo systemctl stop serial-getty@ttyS0.service
+sudo systemctl disable serial-getty@ttyS0.service
+sudo reboot
+
+# ======= ROS setup
+sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+sudo apt update
+sudo apt install ros-melodic-ros-base
+echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
+
+# ======= Terminator install
+sudo apt install terminator
+
+# ======= Reboot
+sudo reboot
