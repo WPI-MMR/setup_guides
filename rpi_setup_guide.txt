@@ -8,9 +8,9 @@ sudo rpi-eeprom-update -a
 
 # ======= General updates and install DE
 sudo apt update && sudo apt upgrade -y
-sudo apt install python3-pip
 sudo apt install --no-install-recommends xubuntu-desktop
 sudo reboot
+sudo apt install python3-pip
 pip3 install --upgrade pip
 pip3 install cython setuptools
 
@@ -26,71 +26,24 @@ sudo systemctl stop serial-getty@ttyS0.service
 sudo systemctl disable serial-getty@ttyS0.service
 sudo reboot
 
-# ======= ROS setup
-sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
-sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
-sudo apt update
-sudo apt install ros-melodic-ros-base
-echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
+# ======= ROS2 setup
+# update locale
+sudo apt update && sudo apt install locales
+sudo locale-gen en_US en_US.UTF-8
+sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+export LANG=en_US.UTF-8
 
-# ======= ROS setup for python3
-sudo apt-get remove ros-*
-sudo apt-get remove ros-melodic-*
-sudo apt-get autoremove
+# setup sources
+sudo apt update && sudo apt install curl gnupg2 lsb-release
+curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+sudo sh -c 'echo "deb [arch=$(dpkg --print-architecture)] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2-latest.list'
 
-sudo apt update
-sudo apt install -y python3 python3-dev python3-pip python3-venv python3-empy build-essential
-sudo -H pip3 install rosdep rospkg rosinstall_generator rosinstall wstool vcstools catkin_tools catkin_pkg
+# install ROS2 Dashing
+sudo apt install ros-dashing-ros-base
+echo 'source /opt/ros/dashing/setup.bash' >> ~/.bashrc
 
-sudo rosdep init
-rosdep update
-
-cd ~
-mkdir ros_catkin_ws
-cd ros_catkin_ws
-
-# don't worry about errors here
-catkin config --init -DCMAKE_BUILD_TYPE=Release --blacklist rqt_rviz rviz_plugin_tutorials librviz_tutorial --install
-rosinstall_generator desktop_full --rosdistro melodic --deps --tar > melodic-desktop-full.rosinstall
-wstool init -j8 src melodic-desktop-full.rosinstall
-export ROS_PYTHON_VERSION=3
-
-# build and install wxPython (reference: https://wxpython.org/blog/2017-08-17-builds-for-linux-with-pip/index.html)
-sudo apt install gtk-3-dev libgstreamer1.0-0 gstreamer1.0-plugins-base freeglut3-dev libwebkitgtk-dev libjpeg-dev libpng-dev libtiff-dev libsdl-dev libnotify-dev libsm-dev
-mkdir ~/wxpy_build && cd wxpy_build
-python3 -m venv builder_py && source builder_py/bin/activate
-pip install -U pip
-pip install -U six wheel setuptools
-pip download wxPython
-pip wheel -v wxPython-4.1.0.tar.gz  2>&1 | tee build.log
-deactivate
-pip3 install wxPython-4.1.0-cp36-cp36m-linux_aarch64.whl
-
-cd ~/ros_catkin_ws
-touch install_skip && nano install_skip
-```add the following to the file
-#!/bin/bash
-#Check whether root
-if [ $(whoami) != root ]; then
-    echo You must be root or use sudo to install packages.
-    return
-fi
-
-#Call apt-get for each package
-for pkg in "$@"
-do
-    echo "Installing $pkg"
-    sudo apt-get -my install $pkg >> install.log
-done
-```
-sudo chmod +x install_skip
-sudo ./install_skip `rosdep check --from-paths src --ignore-src | grep python | sed -e "s/^apt\t//g" | sed -z "s/\n/ /g" | sed -e "s/python/python3/g"`
-rosdep install --from-paths src --ignore-src -y --skip-keys="`rosdep check --from-paths src --ignore-src | grep python | sed -e "s/^apt\t//g" | sed -z "s/\n/ /g"`"
-find . -type f -exec sed -i 's/\/usr\/bin\/env[ ]*python/\/usr\/bin\/env python3/g' {} +
-catkin build
-echo 'export PYTHONPATH=/usr/lib/python3/dist-packages' >> ~/.bashrc
-echo 'source ~/ros_catkin_ws/install/setup.bash' >> ~/.bashrc
-source ~/.bashrc
+# install autocomplete tool
+pip3 install -U argcomplete
 
 # ======= Terminator install
 sudo apt install terminator
