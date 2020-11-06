@@ -12,7 +12,7 @@ sudo apt install --no-install-recommends xubuntu-desktop
 sudo reboot
 sudo apt install python3-pip
 pip3 install --upgrade pip
-pip3 install cython setuptools
+pip3 install cython setuptools pyserial
 
 # ======= Setup serial ports on raspi
 cd /boot/firmware
