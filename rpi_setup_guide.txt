@@ -6,7 +6,7 @@ sudo rpi-eeprom-update -a
 # ======= Install ubuntu 18.04 server on target system
     - for raspi => get img from https://github.com/TheRemote/Ubuntu-Server-raspi4-unofficial/releases
 
-# ======= General updates and install DE
+# ======= General updates and install Desktop Environment
 sudo apt update && sudo apt upgrade -y
 sudo apt install --no-install-recommends xubuntu-desktop
 sudo reboot
